@@ -1,0 +1,33 @@
+{
+  "buildFiles": [
+    "C:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\src\\main\\jni\\Android.mk",
+    "C:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\src\\main\\jni\\Application.mk"
+  ],
+  "cleanCommands": [
+    "C:\\Users\\b\\AppData\\Local\\Android\\Sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dC:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\src\\main\\jni\\Android.mk NDK_APPLICATION_MK\u003dC:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\src\\main\\jni\\Application.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-19 NDK_OUT\u003dC:/Users/b/Desktop/and_face/facedetection/app/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dC:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\build\\intermediates\\ndkBuild\\debug\\lib clean"
+  ],
+  "libraries": {
+    "main-debug-x86": {
+      "buildCommand": "C:\\Users\\b\\AppData\\Local\\Android\\Sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dC:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\src\\main\\jni\\Android.mk NDK_APPLICATION_MK\u003dC:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\src\\main\\jni\\Application.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-19 NDK_OUT\u003dC:/Users/b/Desktop/and_face/facedetection/app/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dC:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\build\\intermediates\\ndkBuild\\debug\\lib C:/Users/b/Desktop/and_face/facedetection/app/build/intermediates/ndkBuild/debug/obj/local/x86/libmain.so",
+      "toolchain": "toolchain-x86",
+      "abi": "x86",
+      "artifactName": "main",
+      "files": [
+        {
+          "src": "C:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\src\\main\\jni\\main.cpp",
+          "flags": "\"-gcc-toolchain\" \"C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../toolchains/x86-4.9/prebuilt/windows-x86_64\" \"-target\" \"i686-none-linux-android\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fPIC\" \"-Wno-invalid-command-line-argument\" \"-Wno-unused-command-line-argument\" \"-no-canonical-prefixes\" \"-g\" \"-fno-exceptions\" \"-fno-rtti\" \"-O0\" \"-UNDEBUG\" \"-fno-limit-debug-info\" \"-IC:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/cxx-stl/llvm-libc++/include\" \"-IC:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/cxx-stl/llvm-libc++abi/include\" \"-IC:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/android/support/include\" \"-IC:/Users/b/Desktop/and_face/facedetection/app/src/main/jni\" \"-std\u003dc++11\" \"-std\u003dc++11\" \"-frtti\" \"-fexceptions\" \"-DANDROID\" \"-D__ANDROID_API__\u003d19\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-mstackrealign\" \"--sysroot\" \"C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sysroot\" \"-isystem\" \"C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sysroot/usr/include/i686-linux-android\""
+        }
+      ],
+      "output": "C:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local\\x86\\libmain.so"
+    }
+  },
+  "toolchains": {
+    "toolchain-x86": {
+      "cppCompilerExecutable": "C:\\Users\\b\\AppData\\Local\\Android\\Sdk\\ndk-bundle\\build\\..\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}
