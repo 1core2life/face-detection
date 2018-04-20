@@ -14,16 +14,20 @@
 using namespace std;
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO   , "libnav", __VA_ARGS__)
-#define EigenData 1
-#define AverageData 2
-#define DEFAULT_WINDOW_POS 40
+#define EIGEN_FACE 1
+#define AVERAGE_DATA 2
+#define DEFAULT_WINDOW_POS 60
+#define DEFAULT_WINDOW_MOVE_POS 30
+#define MAX_SEARCH_SIZE 3
+#define MAX_INDEX_STAGE_1 8
+#define MAX_INDEX_STAGE_2 2
 
 //찾아낸 얼굴 정보
 struct RecognizedFace {
     Point leftTop;
     Point rightBottom;
-    int stage1[8];
-    int stage2[2];
+    int stage1[MAX_INDEX_STAGE_1];
+    int stage2[MAX_INDEX_STAGE_2];
     int multiple;
     int angle;
     int axis;
@@ -60,23 +64,29 @@ int multipleSizeIndex(int mul);
 int normalizeStage2(int k);
 int normalizeStage1(int k);
 
+//현재 미사용
 int** g_thresHold[3];
+//로드된 데이터 저장
 int** g_stage2[3];
 int** g_stage1[3];
-RecognizedFace capturedFace[40000];//한 프레임에서 찾은 얼굴들 저장
+
+//한 프레임에서 찾은 얼굴들 저장
+RecognizedFace capturedFace[1000];
 
 int cameraHeight, cameraWidth ;
 int* buf;
 
 extern "C" {
 
+    //얼굴 모델 로드
     JNIEXPORT void JNICALL Java_com_example_b_facedetection_MainActivity_setting(JNIEnv *env, jobject obj){
 
-        loadFaceData(EigenData);
+        loadFaceData(EIGEN_FACE);
         //loadFaceData(1);
         //getMinStages();
     }
 
+    //현재 미사용,
     JNIEXPORT jbyteArray JNICALL Java_com_example_b_facedetection_Preview_colorGrayArray(JNIEnv *env, jobject obj, jbyteArray pixels){
 
         int len = env->GetArrayLength(pixels);
@@ -113,8 +123,7 @@ extern "C" {
 
         jfieldID fid;
 
-
-        //position 반환
+        //위치 C++ -> Java 반환
         CheckedResult user;
         fid = env->GetFieldID(clazz, "posX", "I");
         user.pointX = env->GetIntField(cp, fid);
@@ -136,6 +145,8 @@ extern "C" {
         user.pointAxis = env->GetIntField(cp, fid);
         env->SetIntField(cp,fid,capturedFace[capturedIndex].axis);
 
+        free(capturedFace);
+
         (env)->ReleaseByteArrayElements( source, sb, JNI_COMMIT);
 
         delete[] buf;
@@ -146,16 +157,15 @@ extern "C" {
 
   int detectFace()
   {
-      int stage2[2] = {0, }; //eye
-      int stage1[8] = {0, }; //nose,eye0,eye1,mouth
+      int stage2[MAX_INDEX_STAGE_2] = {0, }; //eye
+      int stage1[MAX_INDEX_STAGE_1] = {0, }; //nose,eye0,eye1,mouth
 
       int size = 0;//사이즈 총 현재 3개
       double multiple = 1; //비율
       int index = 0;//한 프레임에서 찾은 얼굴 개수
       int angle = 0;//각도
-      int sizeCount = 0;//비교할 사이즈 카운팅
 
-      //rgbToGray();
+      int tempDiff= 0;
 
       double x_axis = 1, y_axis = 1;//얼굴 돌아간 경우, 회전축
 
@@ -166,45 +176,25 @@ extern "C" {
           Point rightBottom(DEFAULT_WINDOW_POS + 200, DEFAULT_WINDOW_POS + 200);
           multiple = 1;
           angle = 0;
-          sizeCount = 0;
           size = 0;
 
           while (true)
           {
               //X방향 한줄 체크 완료
-              if (leftTop.x  >= DEFAULT_WINDOW_POS + 30 ) {
+              if (leftTop.x  >= DEFAULT_WINDOW_POS + DEFAULT_WINDOW_MOVE_POS ) {
                   leftTop.x = DEFAULT_WINDOW_POS;
                   leftTop.y += 5;
                   rightBottom.x = (DEFAULT_WINDOW_POS + 200) * multiple;
                   rightBottom.y += 5;
               }
               //한 크기의 프레임 전부 체크 완료
-              else if (leftTop.y >= DEFAULT_WINDOW_POS + 30 ) {
+              else if (leftTop.y >= DEFAULT_WINDOW_POS + DEFAULT_WINDOW_MOVE_POS ) {
 
                   multiple -= (0.025);
                   size++;
 
-                  //sizeCount++;
-                  /*if (sizeCount == 1) {
 
-                      if (size == 19)
-                          break;
-
-                      multiple -= (0.025);
-                      size++;
-                  }
-
-                  else if (sizeCount == 2) {
-
-                      if (size == 1)
-                          break;
-
-                      multiple += (0.05);
-                      size -= 2;
-                  }*/
-
-                  //if(sizeCount == 5)
-                  if(size == 3) //최소 탐색 크기
+                  if(size == MAX_SEARCH_SIZE) //최소 탐색 크기
                       break;
 
                   leftTop.x = DEFAULT_WINDOW_POS;
@@ -219,7 +209,7 @@ extern "C" {
 
                   Point faceCenter(Point(leftTop.x + 100 * multiple * x_axis, leftTop.y + 75 * multiple * y_axis)); //확인된 얼굴 정중앙
 
-                  for (int i = 0; i < 3; i++) {
+                  //for (int i = 0; i < 3; i++) {
                       //코
                      /* stage1[0] = checker3Block(
                               Point(leftTop.x + 80 * multiple * x_axis,
@@ -294,106 +284,116 @@ extern "C" {
                                     leftTop.y + 80 * multiple * y_axis),
                               faceCenter, angle);
 
-                     //   if(stage1[2] + stage1[3] < 10 && stage1[4] + stage1[5] < 10  ) {
+                        tempDiff = abs(g_stage1[axisChange][size][2] - stage1[2] + g_stage1[axisChange][size][3] - stage1[3]) / normalizeStage1(2) ;
 
-                            ////입술
-                            stage1[6] = checker2Block(
-                                    Point(leftTop.x + 87 * multiple * x_axis,
-                                          leftTop.y + 111 * multiple * y_axis),
-                                    Point(leftTop.x + 107 * multiple * x_axis,
-                                          leftTop.y + 131 * multiple * y_axis),
-                                    Point(leftTop.x + 87 * multiple * x_axis,
-                                          leftTop.y + 131 * multiple * y_axis),
-                                    Point(leftTop.x + 107 * multiple * x_axis,
-                                          leftTop.y + 151 * multiple * y_axis),
-                                    faceCenter, angle);
-                            stage1[7] = checker2Block(
-                                    Point(leftTop.x + 127 * multiple * x_axis,
-                                          leftTop.y + 100 * multiple * y_axis),
-                                    Point(leftTop.x + 147 * multiple * x_axis,
-                                          leftTop.y + 120 * multiple * y_axis),
-                                    Point(leftTop.x + 127 * multiple * x_axis,
-                                          leftTop.y + 120 * multiple * y_axis),
-                                    Point(leftTop.x + 147 * multiple * x_axis,
-                                          leftTop.y + 140 * multiple * y_axis),
-                                    faceCenter, angle);
+                        //얼굴과 유사한지 확인
+                        if( tempDiff < 20 ) {
+                            tempDiff = abs(g_stage1[axisChange][size][4] - stage1[4] + g_stage1[axisChange][size][5] - stage1[5]) / normalizeStage1(4) ;
 
+                            if (tempDiff < 40) {
+                                ////입술
+                                stage1[6] = checker2Block(
+                                        Point(leftTop.x + 87 * multiple * x_axis,
+                                              leftTop.y + 111 * multiple * y_axis),
+                                        Point(leftTop.x + 107 * multiple * x_axis,
+                                              leftTop.y + 131 * multiple * y_axis),
+                                        Point(leftTop.x + 87 * multiple * x_axis,
+                                              leftTop.y + 131 * multiple * y_axis),
+                                        Point(leftTop.x + 107 * multiple * x_axis,
+                                              leftTop.y + 151 * multiple * y_axis),
+                                        faceCenter, angle);
+                                stage1[7] = checker2Block(
+                                        Point(leftTop.x + 127 * multiple * x_axis,
+                                              leftTop.y + 100 * multiple * y_axis),
+                                        Point(leftTop.x + 147 * multiple * x_axis,
+                                              leftTop.y + 120 * multiple * y_axis),
+                                        Point(leftTop.x + 127 * multiple * x_axis,
+                                              leftTop.y + 120 * multiple * y_axis),
+                                        Point(leftTop.x + 147 * multiple * x_axis,
+                                              leftTop.y + 140 * multiple * y_axis),
+                                        faceCenter, angle);
 
-                          //  if (stage1[6] + stage1[7] < 10) {
-                                /*if (stage1[0] > g_thresHold[axisChange][size][0] &&
-                                    stage1[1] > g_thresHold[axisChange][size][1] &&
-                                    stage1[2] < g_thresHold[axisChange][size][2] &&
-                                    stage1[3] < g_thresHold[axisChange][size][3] &&
-                                    stage1[4] < g_thresHold[axisChange][size][4] &&
-                                    stage1[5] < g_thresHold[axisChange][size][5] &&
-                                    stage1[6] < g_thresHold[axisChange][size][6] &&
-                                    stage1[7] < g_thresHold[axisChange][size][7]) {
-          */
-                                //눈
-                                stage2[0] = checker3Block(Point(leftTop.x + 82 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                123 * multiple * y_axis),
-                                                          Point(leftTop.x + 92 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                143 * multiple * y_axis),
-                                                          Point(leftTop.x + 92 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                123 * multiple * y_axis),
-                                                          Point(leftTop.x + 112 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                143 * multiple * y_axis),
-                                                          Point(leftTop.x + 112 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                123 * multiple * y_axis),
-                                                          Point(leftTop.x + 122 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                143 * multiple * y_axis),
-                                                          faceCenter, angle);
-                                //코
-                                stage2[1] = checker3Block(Point(leftTop.x + 83 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                100 * multiple * y_axis),
-                                                          Point(leftTop.x + 93 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                120 * multiple * y_axis),
-                                                          Point(leftTop.x + 93 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                100 * multiple * y_axis),
-                                                          Point(leftTop.x + 113 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                120 * multiple * y_axis),
-                                                          Point(leftTop.x + 113 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                100 * multiple * y_axis),
-                                                          Point(leftTop.x + 123 * multiple * x_axis,
-                                                                leftTop.y +
-                                                                120 * multiple * y_axis),
-                                                          faceCenter, angle);
+                                tempDiff = abs(g_stage1[axisChange][size][6] - stage1[6] + g_stage1[axisChange][size][7] - stage1[7]) / normalizeStage1(6) ;
 
-                                //얼굴로 인식
-                                //if (g_stage2[0] < g_thresHold[axisChange][size][8] && g_stage2[0] < g_thresHold[axisChange][size][9]) {
+                                if ( tempDiff < 40) {
+                                    /*if (stage1[0] > g_thresHold[axisChange][size][0] &&
+                                        stage1[1] > g_thresHold[axisChange][size][1] &&
+                                        stage1[2] < g_thresHold[axisChange][size][2] &&
+                                        stage1[3] < g_thresHold[axisChange][size][3] &&
+                                        stage1[4] < g_thresHold[axisChange][size][4] &&
+                                        stage1[5] < g_thresHold[axisChange][size][5] &&
+                                        stage1[6] < g_thresHold[axisChange][size][6] &&
+                                        stage1[7] < g_thresHold[axisChange][size][7]) {
+              */
+                                    //눈
+                                    stage2[0] = checker3Block(
+                                            Point(leftTop.x + 82 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  123 * multiple * y_axis),
+                                            Point(leftTop.x + 92 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  143 * multiple * y_axis),
+                                            Point(leftTop.x + 92 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  123 * multiple * y_axis),
+                                            Point(leftTop.x + 112 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  143 * multiple * y_axis),
+                                            Point(leftTop.x + 112 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  123 * multiple * y_axis),
+                                            Point(leftTop.x + 122 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  143 * multiple * y_axis),
+                                            faceCenter, angle);
+                                    //코
+                                    stage2[1] = checker3Block(
+                                            Point(leftTop.x + 83 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  100 * multiple * y_axis),
+                                            Point(leftTop.x + 93 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  120 * multiple * y_axis),
+                                            Point(leftTop.x + 93 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  100 * multiple * y_axis),
+                                            Point(leftTop.x + 113 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  120 * multiple * y_axis),
+                                            Point(leftTop.x + 113 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  100 * multiple * y_axis),
+                                            Point(leftTop.x + 123 * multiple * x_axis,
+                                                  leftTop.y +
+                                                  120 * multiple * y_axis),
+                                            faceCenter, angle);
 
-                                //현재 값 저장
-                                capturedFace[index].leftTop = leftTop;
-                                capturedFace[index].rightBottom = rightBottom;
-                                capturedFace[index].multiple = multiple * 1000; //double 형 오차 때문에..
-                                capturedFace[index].stage1[0] = stage1[0];
-                                capturedFace[index].stage1[1] = stage1[1];
-                                capturedFace[index].stage1[2] = stage1[2];
-                                capturedFace[index].stage1[3] = stage1[3];
-                                capturedFace[index].stage1[4] = stage1[4];
-                                capturedFace[index].stage1[5] = stage1[5];
-                                capturedFace[index].stage1[6] = stage1[6];
-                                capturedFace[index].stage1[7] = stage1[7];
-                                capturedFace[index].angle = angle;
-                                capturedFace[index].axis = 0;
-                                capturedFace[index].stage2[0] = stage2[0];
-                                capturedFace[index++].stage2[1] = stage2[1];
-                                //  }
-                                //  }
-                        //    }
-                      //  }
+                                    //얼굴로 인식
+                                    //if (g_stage2[0] < g_thresHold[axisChange][size][8] && g_stage2[0] < g_thresHold[axisChange][size][9]) {
 
+                                    //현재 값 저장
+                                    capturedFace[index].leftTop = leftTop;
+                                    capturedFace[index].rightBottom = rightBottom;
+                                    capturedFace[index].multiple =
+                                            multiple * 1000; //double 형 오차 때문에..
+                                   /* capturedFace[index].stage1[0] = stage1[0];
+                                    capturedFace[index].stage1[1] = stage1[1];*/
+                                    capturedFace[index].stage1[2] = stage1[2];
+                                    capturedFace[index].stage1[3] = stage1[3];
+                                    capturedFace[index].stage1[4] = stage1[4];
+                                    capturedFace[index].stage1[5] = stage1[5];
+                                    capturedFace[index].stage1[6] = stage1[6];
+                                    capturedFace[index].stage1[7] = stage1[7];
+                                    capturedFace[index].angle = angle;
+                                    capturedFace[index].axis = 0;
+                                    capturedFace[index].stage2[0] = stage2[0];
+                                    capturedFace[index++].stage2[1] = stage2[1];
+
+                                    //  }
+                                    //  }
+                                }
+                            }
+                        }
 
 
                         /*if (i == 0 || i == 1 || i == 2)
@@ -403,11 +403,11 @@ extern "C" {
                         else if (i == 4 || i == 5 || i == 6)
                             angle--;*/
 
-                      if (i == 0 )
+                     /* if (i == 0 )
                           angle++;
                       else if (i == 1)
                           angle -= 2;
-                  }
+                  }*/
 
                     leftTop.x += 5;
                     rightBottom.x += 5;
@@ -435,6 +435,7 @@ extern "C" {
         else
             capturedFace[bestIndex].multiple = 0;
 
+
         return bestIndex;
     }
 
@@ -454,18 +455,20 @@ extern "C" {
 
             multipleIndex = multipleSizeIndex(capturedFace[i].multiple);
 
-            stage1Diff[i] = new int[8];
-            stage2Diff[i] =new int[2];
-            for(int k=0;k<8 ;k++) {
+            stage1Diff[i] = new int[MAX_INDEX_STAGE_1];
+            stage2Diff[i] =new int[MAX_INDEX_STAGE_2];
+
+            //0,1 임시 미사용 > 2 부터
+            for(int k=2;k<MAX_INDEX_STAGE_1 ;k++) {
                 normalizer = normalizeStage1(k);
                 stage1Diff[i][k] = abs(g_stage1[capturedFace[i].axis][multipleIndex][k] - capturedFace[i].stage1[k])/normalizer;
             }
-            for(int k=0;k<2 ;k++) {
+            for(int k=0;k<MAX_INDEX_STAGE_2 ;k++) {
                 normalizer = normalizeStage2(k);
                 stage2Diff[i][k] = abs(g_stage2[capturedFace[i].axis][multipleIndex][k] - capturedFace[i].stage2[k])/normalizer;
             }
 
-            sum = ( stage1Diff[i][0] + stage1Diff[i][1] + stage1Diff[i][2] + stage1Diff[i][3] + stage1Diff[i][4]
+            sum = ( + stage1Diff[i][2] + stage1Diff[i][3] + stage1Diff[i][4]
                                  + stage1Diff[i][5] + stage1Diff[i][6] + stage1Diff[i][7] + stage2Diff[i][0] + stage2Diff[i][1] ) / ((double)capturedFace[i].multiple/1000) / ((double)capturedFace[i].multiple/1000) ;
 
 
@@ -477,7 +480,8 @@ extern "C" {
             }
         }
 
-        //LOGI(" %d %d %d %d %d %d" , stage1Diff[result][2],stage1Diff[result][3] ,stage1Diff[result][4] ,stage1Diff[result][5] ,stage1Diff[result][6] ,stage1Diff[result][7] );
+      //LOGI(" %d %d %d %d %d %d  %d %d" , capturedFace[result].stage1[2], capturedFace[result].stage1[3] , capturedFace[result].stage1[4] , capturedFace[result].stage1[5] , capturedFace[result].stage1[6] , capturedFace[result].stage1[7],  capturedFace[result].stage2[0], capturedFace[result].stage2[1] );
+      //LOGI(" %d %d %d %d %d %d" , stage1Diff[result][2],stage1Diff[result][3] ,stage1Diff[result][4] ,stage1Diff[result][5] ,stage1Diff[result][6] ,stage1Diff[result][7] );
         return result;
     }
 
@@ -506,7 +510,7 @@ extern "C" {
     void loadFaceData(int flag) {
 
         ifstream in;
-        if(flag == AverageData) {
+        if(flag == AVERAGE_DATA) {
             in.open("/sdcard/Download/faceData.txt");
         }
         else {
@@ -525,11 +529,11 @@ extern "C" {
 
         for(int i=0 ;i<3; i++) {
             for (multipleIndex = 0; multipleIndex < 20; multipleIndex++) {
-                g_stage1[i][multipleIndex] = new int[8];
+                g_stage1[i][multipleIndex] = new int[MAX_INDEX_STAGE_1];
             }
 
             for (multipleIndex = 0; multipleIndex < 20; multipleIndex++) {
-                g_stage2[i][multipleIndex] = new int[2];
+                g_stage2[i][multipleIndex] = new int[MAX_INDEX_STAGE_2];
             }
         }
 
@@ -667,14 +671,15 @@ extern "C" {
         return  ((buf[( (cameraWidth * rotated.y + rotated.x ))] ) & 0xff) ;
     }
 
+    //현재 미사용
     void getMinStages() {
 
         ifstream in("/sdcard/Download/faceDataDetailed.txt");
         string s;
         size_t pos;
 
-        int stage2[2] = {-465398, -465398};
-        int stage1[8] = { 100000, 100000, -1000000, -1000000 , -1000000, -1000000, -1000000, -1000000 }; //nose,eye0,eye1,mouth
+        int stage2[MAX_INDEX_STAGE_2] = {-465398, -465398};
+        int stage1[MAX_INDEX_STAGE_1] = { 100000, 100000, -1000000, -1000000 , -1000000, -1000000, -1000000, -1000000 }; //nose,eye0,eye1,mouth
         double multipleTemp = 1;
         int multipleIndex;
 

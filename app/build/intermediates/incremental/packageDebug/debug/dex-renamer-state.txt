@@ -1,4 +1,4 @@
-#Mon Mar 19 01:13:03 KST 2018
-base.0=C\:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\0
+#Fri Apr 20 18:25:35 KST 2018
+base.0=C\:\\Users\\b\\Desktop\\android_pro\\and_face\\facedetection\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\0
 renamed.0=classes.dex
-file.0=C\:\\Users\\b\\Desktop\\and_face\\facedetection\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\0\\classes.dex
+file.0=C\:\\Users\\b\\Desktop\\android_pro\\and_face\\facedetection\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\0\\classes.dex

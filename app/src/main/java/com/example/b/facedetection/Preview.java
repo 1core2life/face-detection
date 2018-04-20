@@ -48,6 +48,7 @@ class Preview  extends View implements Camera.PreviewCallback {
 
     private Bitmap[] mustache;
     private Bitmap[] glass;
+    private Bitmap[] cap;
     private Matrix matrix = new Matrix();
 
     class CheckedPos{
@@ -67,6 +68,7 @@ class Preview  extends View implements Camera.PreviewCallback {
 
         mustache = new Bitmap[20];
         glass = new Bitmap[20];
+        cap = new Bitmap[20];
 
         for(int i=0;i<20;i++) {
             mustache[i] = BitmapFactory.decodeResource(context.getResources(),R.drawable.mustache);
@@ -74,6 +76,9 @@ class Preview  extends View implements Camera.PreviewCallback {
 
             glass[i] = BitmapFactory.decodeResource(context.getResources(),R.drawable.glass);
             glass[i] = Bitmap.createScaledBitmap(glass[i], (int) ( 8*glass[i].getWidth()*(1-(0.025*i))), (int) ( 8*glass[i].getHeight()*(1-(0.025*i))),true);
+
+            cap[i] = BitmapFactory.decodeResource(context.getResources(),R.drawable.cap);
+            cap[i] = Bitmap.createScaledBitmap(cap[i], (int) ( 8*cap[i].getWidth()*(1-(0.025*i))), (int) ( 8*cap[i].getHeight()*(1-(0.025*i))),true);
         }
 
         cp = new CheckedPos();
@@ -92,10 +97,10 @@ class Preview  extends View implements Camera.PreviewCallback {
                     /*byte[] bb = colorGrayArray(copyByteData);
                     frameBmp = returnBitmap(bb,frameBmp);*/
 
-                    long start = System.currentTimeMillis();
+                    //long start = System.currentTimeMillis();  //시간 계산
                     findFace(copyByteData, CAMERA_WIDTH, CAMERA_HEIGHT, cp );   //cp에 얼굴 위치 저장
-                    long estimated = System.currentTimeMillis() - start;
-                    Log.i("lib","running time: " + estimated);
+                    //long estimated = System.currentTimeMillis() - start;
+                    //Log.i("lib","running time: " + estimated);
 
                     int index = multipleSize(cp.multiple);
 
@@ -110,15 +115,22 @@ class Preview  extends View implements Camera.PreviewCallback {
                     matrix.setRotate(5 * cp.angle , (int)( (cp.posX +( 200 *0.001 *cp.multiple *0.5) -(mustache[index].getWidth()*0.5) )),
                             (int) ( cp.posY +( 200 *0.001 *cp.multiple *0.5) -(mustache[index].getHeight()*0.5) ));
                     canvas.setMatrix(matrix);
-                    canvas.drawBitmap(mustache[index], (int)( (cp.posX +( 200 *0.001 *cp.multiple *0.5) -(mustache[index].getWidth()*0.5) )),
-                            (int) ( cp.posY +( 200 *0.001 *cp.multiple *0.5) -(mustache[index].getHeight()*0.5) + 20) ,null);
+                    if(cp.multiple != 0)
+                        canvas.drawBitmap(mustache[index], (int)( (cp.posX +( 200 *0.001 *cp.multiple *0.5) -(mustache[index].getWidth()*0.5) )),
+                                (int) ( cp.posY +( 200 *0.001 *cp.multiple *0.5) -(mustache[index].getHeight()*0.5) + 20) ,null);
 
-                    matrix.setRotate(5 * cp.angle , (int)( (cp.posX +( 200 *0.001 *cp.multiple *0.5) -(glass[index].getWidth()*0.5) )),
+/*                    matrix.setRotate(5 * cp.angle , (int)( (cp.posX +( 200 *0.001 *cp.multiple *0.5) -(glass[index].getWidth()*0.5) )),
                             (int) ( cp.posY +( 200 *0.001 *cp.multiple *0.5) -(glass[index].getHeight()*0.5) ));
                     canvas.setMatrix(matrix);
                     canvas.drawBitmap(glass[index], (int)( (cp.posX +( 200 *0.001 *cp.multiple *0.5) -(glass[index].getWidth()*0.5) )),
                             (int) ( cp.posY +( 200 *0.001 *cp.multiple *0.1) -(glass[index].getHeight()*0.5) + 20) ,null);
 
+                    matrix.setRotate(5 * cp.angle , (int)( (cp.posX +( 200 *0.001 *cp.multiple *0.5) -(cap[index].getWidth()*0.5) )),
+                            (int) ( cp.posY +( 200 *0.001 *cp.multiple) -(cap[index].getHeight()*0.5) ));
+                    canvas.setMatrix(matrix);
+                    canvas.drawBitmap(cap[index], (int)( (cp.posX +( 200 *0.001 *cp.multiple *0.5) -(cap[index].getWidth()*0.5) )),
+                            (int) ( cp.posY +( 200 *0.001 *cp.multiple)  -(cap[index].getHeight() ) - 120 ) ,null);
+*/
                     cameraPreviewValid = false;
                 }
             }

@@ -1,7 +1,7 @@
-C:/Users/b/Desktop/and_face/facedetection/app/build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/objs-debug/main/main.o: \
-  C:/Users/b/Desktop/and_face/facedetection/app/src/main/jni/main.cpp \
-  C:/Users/b/Desktop/and_face/facedetection/app/src/main/jni/com_example_b_facedetection_MainActivity.h \
-  C:/Users/b/Desktop/and_face/facedetection/app/src/main/jni/Point.h \
+C:/Users/b/Desktop/android_pro/and_face/facedetection/app/build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/objs-debug/main/main.o: \
+  C:/Users/b/Desktop/android_pro/and_face/facedetection/app/src/main/jni/main.cpp \
+  C:/Users/b/Desktop/android_pro/and_face/facedetection/app/src/main/jni/com_example_b_facedetection_MainActivity.h \
+  C:/Users/b/Desktop/android_pro/and_face/facedetection/app/src/main/jni/Point.h \
   C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/cxx-stl/llvm-libc++/include\stdlib.h \
   C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/cxx-stl/llvm-libc++/include\string.h \
   C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/cxx-stl/llvm-libc++/include\stdio.h \
@@ -62,9 +62,9 @@ C:/Users/b/Desktop/and_face/facedetection/app/build/intermediates/ndkBuild/debug
   C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/cxx-stl/llvm-libc++/include\istream \
   C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/cxx-stl/llvm-libc++/include\iostream
 
-C:/Users/b/Desktop/and_face/facedetection/app/src/main/jni/com_example_b_facedetection_MainActivity.h:
+C:/Users/b/Desktop/android_pro/and_face/facedetection/app/src/main/jni/com_example_b_facedetection_MainActivity.h:
 
-C:/Users/b/Desktop/and_face/facedetection/app/src/main/jni/Point.h:
+C:/Users/b/Desktop/android_pro/and_face/facedetection/app/src/main/jni/Point.h:
 
 C:/Users/b/AppData/Local/Android/Sdk/ndk-bundle/build//../sources/cxx-stl/llvm-libc++/include\stdlib.h:
 
